@@ -6,10 +6,14 @@ services:
     buildCommand: "./mvnw clean install"
     startCommand: "java -jar target/notesapp-backend-1.0.0.jar"
     envVars:
-      - key: DATABASE_URL
+      - key: DB_URL
         fromDatabase: notesapp
+      - key: DB_USER
+        value: notesphere_user
+      - key: DB_PASSWORD
+        value: VBcLdIcDIPxGKmFWYYuDnwizzYks1iYF
       - key: JWT_SECRET
-        value: <YourJWTSecret>
+        value: ChangeMeSecret
       - key: CORS_ALLOWED_ORIGINS
         value: https://notes-app-frontend.vercel.app
       - key: APP_ORIGIN

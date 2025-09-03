@@ -1,4 +1,4 @@
-package com.example.Notesphere.auth;
+package com.example.notesapp.auth;
 
 import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;

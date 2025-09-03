@@ -1,8 +1,12 @@
-package com.example.Notesphere.share;
+package com.example.notesapp.share;
 
 import com.example.notesapp.notes.NoteDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
+import java.util.Map;
+import java.util.UUID;
 
 @RestController
 public class ShareController {

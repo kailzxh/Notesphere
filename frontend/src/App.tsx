@@ -1,35 +1,55 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import Login from './routes/Login';
+import Signup from './routes/Signup';
+import NotesList from './routes/NotesList';
+import NoteDetail from './routes/NoteDeatils';
+import SharedNote from './routes/SharedNote';
+import Navbar from './components/Navbar';
+import { getAccessToken, setAccessToken, clearAccessToken } from './lib/auth';
+import client from './api/client';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [theme, setTheme] = useState('light');
+  const token = getAccessToken();
+  const navigate = useNavigate();
+
+  // Check login status on mount
+  useEffect(() => {
+    if (token) {
+      client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+  }, [token]);
+
+  const handleLogout = async () => {
+    try {
+      await client.post('/auth/logout', null);
+      clearAccessToken();
+      navigate('/login');
+    } catch (e) {
+      console.error('Logout failed', e);
+    }
+  };
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    document.documentElement.classList.toggle('dark', newTheme === 'dark');
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="min-h-screen">
+      <Navbar onLogout={handleLogout} onToggleTheme={toggleTheme} />
+      <Routes>
+        <Route path="/" element={<Navigate to="/notes" replace />} />
+      <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/notes" element={<NotesList />} />
+        <Route path="/notes/:id" element={<NoteDetail />} />
+        <Route path="/shared/:shareId" element={<SharedNote />} />
+      </Routes>
+    </div>
+  );
 }
 
-export default App
+export default App;

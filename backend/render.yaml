@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: notes-backend
+    env: java
+    plan: starter
+    buildCommand: "./mvnw clean install"
+    startCommand: "java -jar target/notesapp-backend-1.0.0.jar"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: notesapp
+      - key: JWT_SECRET
+        value: <YourJWTSecret>
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://notes-app-frontend.vercel.app
+      - key: APP_ORIGIN
+        value: https://notes-app-frontend.vercel.app

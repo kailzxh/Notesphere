@@ -1,0 +1,40 @@
+{
+  "info": {
+    "name": "Notes App API",
+    "_postman_id": "abcdef-12345",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Signup",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type","value": "application/json"}],
+        "body": { "mode": "raw", "raw": "{\"email\":\"user@example.com\",\"password\":\"Pass123!\"}" },
+        "url": { "raw": "{{backend_url}}/auth/signup", "host": ["{{backend_url}}"], "path": ["auth","signup"] }
+      }
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type","value": "application/json"}],
+        "body": { "mode": "raw", "raw": "{\"email\":\"user@example.com\",\"password\":\"Pass123!\"}" },
+        "url": { "raw": "{{backend_url}}/auth/login", "host": ["{{backend_url}}"], "path": ["auth","login"] }
+      }
+    },
+    {
+      "name": "Create Note",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type","value": "application/json"},
+          {"key": "Authorization","value": "Bearer {{access_token}}"}
+        ],
+        "body": { "mode": "raw", "raw": "{\"title\":\"New Note\",\"content\":\"Content\"}" },
+        "url": { "raw": "{{backend_url}}/api/notes", "host": ["{{backend_url}}"], "path": ["api","notes"] }
+      }
+    }
+    // (Add more entries similarly: List, Get, Update, Delete, Share, etc.)
+  ]
+}

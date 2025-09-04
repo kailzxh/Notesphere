@@ -7,10 +7,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Service
 public class ShareService {
+
     private final NotesService notesService;
     private final NoteShareRepository shareRepo;
 
@@ -21,15 +23,19 @@ public class ShareService {
 
     public String createShare(String userId, UUID noteId) {
         Note note = notesService.getNote(userId, noteId);
+
         String shareId = UUID.randomUUID().toString();
 
-        // mark note as shared
+        // Mark note as shared
         note.setShared(true);
 
-        // either update existing share or create new
-        NoteShare share = shareRepo.findByNoteId(noteId).orElse(new NoteShare());
+        // Either update existing share or create new
+        NoteShare share = shareRepo.findByNoteId(noteId)
+                .orElse(new NoteShare());
         share.setNoteId(noteId);
         share.setShareId(shareId);
+        share.setCreatedAt(Instant.now());
+
         shareRepo.save(share);
 
         return shareId;
@@ -43,13 +49,13 @@ public class ShareService {
 
     public NoteDTO getPublicNote(String shareId) {
         NoteShare share = shareRepo.findByShareId(shareId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Share not found"));
 
-        // ⚠️ In getNote we need a userId; here we only have noteId.
-        // If NotesService requires userId, adjust it; otherwise fetch note directly from repo.
+        // Fetch note directly by ID (no userId needed)
         Note note = notesService.getNoteById(share.getNoteId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Note not found"));
 
+        // Convert to DTO
         NoteDTO dto = new NoteDTO();
         dto.setId(note.getId());
         dto.setTitle(note.getTitle());

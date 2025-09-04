@@ -59,7 +59,7 @@ public class AuthController {
             ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                     .httpOnly(true)
                     .secure(false)          // false for local HTTP
-                    .path("/auth/refresh")
+                    .path("/")
                     .maxAge(refreshTokenExpiry / 1000)
                     .sameSite("Lax")        // safe for localhost
                     .build();
@@ -99,7 +99,7 @@ public class AuthController {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .secure(false)       // false for localhost
-                .path("/auth/refresh")
+                .path("/")
                 .maxAge(refreshTokenExpiry / 1000)
                 .sameSite("Lax")
                 .build();
@@ -134,7 +134,7 @@ public class AuthController {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", newRefreshToken)
                 .httpOnly(true)
                 .secure(false)   // false for localhost
-                .path("/auth/refresh")
+                .path("/")
                 .maxAge(refreshTokenExpiry / 1000)
                 .sameSite("Lax")
                 .build();
@@ -149,7 +149,7 @@ public class AuthController {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(false)   // false for localhost
-                .path("/auth/refresh")
+                .path("/")
                 .maxAge(0)
                 .sameSite("Lax")
                 .build();

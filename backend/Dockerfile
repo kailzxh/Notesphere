@@ -1,28 +1,27 @@
-# Use official OpenJDK 21 as base
+# Use a Java 21 image
 FROM eclipse-temurin:21-jdk-jammy
 
 # Set working directory
 WORKDIR /app
 
-# Copy Maven wrapper and pom.xml first (to cache dependencies)
-COPY mvnw .
+# Copy Maven wrapper and pom
+COPY mvnw pom.xml ./
 COPY .mvn .mvn
-COPY pom.xml .
 
-# Give execute permission to mvnw
+# Make mvnw executable
 RUN chmod +x mvnw
 
-# Download dependencies (cache this layer)
+# Download dependencies
 RUN ./mvnw dependency:go-offline -B
 
-# Copy the rest of the source code
+# Copy source code
 COPY src ./src
 
 # Package the application
-RUN ./mvnw clean package -DskipTests
+RUN ./mvnw package -DskipTests
 
-# Expose port (must match your Spring Boot server.port)
+# Expose port 8080
 EXPOSE 8080
 
-# Run the jar file
+# Run the jar
 CMD ["java", "-jar", "target/notesapp-backend-1.0.0.jar"]

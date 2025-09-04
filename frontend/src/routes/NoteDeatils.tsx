@@ -36,6 +36,7 @@ export default function NoteDetail() {
     if (!id) navigate('/notes');
   }, [id, navigate]);
 
+  
   const saveNote = async () => {
     try {
       const res = await client.put(
@@ -54,6 +55,7 @@ export default function NoteDetail() {
         toast.error('Save failed');
       }
     }
+     navigate("/notes"); 
   };
 
   const deleteNote = async () => {

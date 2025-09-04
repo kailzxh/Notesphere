@@ -39,9 +39,11 @@ function App() {
 
   return (
     <div className="min-h-screen">
-      <Navbar onLogout={handleLogout} onToggleTheme={toggleTheme} />
+      <Navbar  onToggleTheme={toggleTheme} />
       <Routes>
-        <Route path="/" element={<Navigate to="/notes" replace />} />
+        <Route path="/" element={
+    getAccessToken() ? <Navigate to="/notes" replace /> : <Navigate to="/login" replace />
+  }/>
       <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/notes" element={<NotesList />} />

@@ -7,7 +7,7 @@ export default function SharedNote() {
   const { data, error, isLoading } = useQuery(['shared', shareId], async () => {
     if (!shareId) throw new Error('Missing shareId');
 
-    const res = await fetch(`/api/public/notes/${shareId}`);
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/notes/${shareId}`);
     if (!res.ok) throw new Error('Note not found');
     return res.json();
   });

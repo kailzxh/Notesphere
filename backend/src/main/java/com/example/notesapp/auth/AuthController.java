@@ -34,39 +34,50 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody Map<String, String> body, HttpServletResponse response) {
-        String email = body.get("email");
-        String password = body.get("password");
-        if (email == null || password == null) {
-            return ResponseEntity.badRequest().body(new ApiError("Email and password required"));
+        try {
+            String email = body.get("email");
+            String password = body.get("password");
+            if (email == null || password == null) {
+                return ResponseEntity.badRequest().body(new ApiError("Email and password required"));
+            }
+            if (userRepo.findByEmail(email).isPresent()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(new ApiError("Email already exists"));
+            }
+
+            // Create user
+            User user = new User();
+            user.setEmail(email);
+            user.setPasswordHash(passwordEncoder.encode(password));
+            User savedUser = userRepo.save(user); // ensures ID is generated
+
+            // Generate tokens
+            String accessToken = jwtUtil.generateAccessToken(savedUser.getId().toString());
+            String refreshToken = jwtUtil.generateRefreshToken(savedUser.getId().toString());
+
+            // Cookie safe for localhost
+            ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
+                    .httpOnly(true)
+                    .secure(false)          // false for local HTTP
+                    .path("/auth/refresh")
+                    .maxAge(refreshTokenExpiry / 1000)
+                    .sameSite("Lax")        // safe for localhost
+                    .build();
+
+            response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "user", Map.of("id", savedUser.getId(), "email", savedUser.getEmail()),
+                    "accessToken", accessToken
+            ));
+
+        } catch (Exception e) {
+            e.printStackTrace(); // logs the actual exception for debugging
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Internal error"));
         }
-        if (userRepo.findByEmail(email).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new ApiError("Email already exists"));
-        }
-
-        User user = new User();
-        user.setEmail(email);
-        user.setPasswordHash(passwordEncoder.encode(password));
-        userRepo.save(user);
-
-        String accessToken = jwtUtil.generateAccessToken(user.getId().toString());
-        String refreshToken = jwtUtil.generateRefreshToken(user.getId().toString());
-
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
-                .httpOnly(true)
-                .secure(true)
-                .path("/auth/refresh")
-                .maxAge(refreshTokenExpiry / 1000)
-                .sameSite("None")
-                .build();
-
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                "user", Map.of("id", user.getId(), "email", user.getEmail()),
-                "accessToken", accessToken
-        ));
     }
+
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> body, HttpServletResponse response) {
@@ -75,8 +86,9 @@ public class AuthController {
         if (email == null || password == null) {
             return ResponseEntity.badRequest().body(new ApiError("Email and password required"));
         }
+
         Optional<User> userOpt = userRepo.findByEmail(email);
-        if (!userOpt.isPresent() || !passwordEncoder.matches(password, userOpt.get().getPasswordHash())) {
+        if (userOpt.isEmpty() || !passwordEncoder.matches(password, userOpt.get().getPasswordHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiError("Invalid credentials"));
         }
 
@@ -86,10 +98,10 @@ public class AuthController {
 
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)       // false for localhost
                 .path("/auth/refresh")
                 .maxAge(refreshTokenExpiry / 1000)
-                .sameSite("None")
+                .sameSite("Lax")
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -121,10 +133,10 @@ public class AuthController {
 
         ResponseCookie cookie = ResponseCookie.from("refreshToken", newRefreshToken)
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)   // false for localhost
                 .path("/auth/refresh")
                 .maxAge(refreshTokenExpiry / 1000)
-                .sameSite("None")
+                .sameSite("Lax")
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -136,14 +148,15 @@ public class AuthController {
     public ResponseEntity<?> logout(HttpServletResponse response) {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)   // false for localhost
                 .path("/auth/refresh")
                 .maxAge(0)
-                .sameSite("None")
+                .sameSite("Lax")
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         return ResponseEntity.noContent().build();
     }
+
 }

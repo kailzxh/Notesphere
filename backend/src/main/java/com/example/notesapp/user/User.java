@@ -4,25 +4,47 @@ import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
 
+import lombok.Setter;
+import org.hibernate.annotations.GenericGenerator;
+
 @Entity
 @Table(name = "users")
 public class User {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(
+            name = "UUID",
+            strategy = "org.hibernate.id.UUIDGenerator"
+    )
+    @Column(updatable = false, nullable = false)
     private UUID id;
 
+    @Setter
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Setter
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
     @Column(name = "created_at", updatable = false)
-    private Instant createdAt = Instant.now();
+    private Instant createdAt;
 
     @Column(name = "updated_at")
-    private Instant updatedAt = Instant.now();
+    private Instant updatedAt;
+
+    // ---- Lifecycle callbacks ----
+    @PrePersist
+    protected void onCreate() {
+        createdAt = Instant.now();
+        updatedAt = createdAt;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = Instant.now();
+    }
 
     // ---- getters ----
     public UUID getId() {
@@ -45,24 +67,4 @@ public class User {
         return updatedAt;
     }
 
-    // ---- setters ----
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
-    }
-
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public void setUpdatedAt(Instant updatedAt) {
-        this.updatedAt = updatedAt;
-    }
 }

@@ -17,6 +17,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/notes")
 public class NotesController {
+
     private final NotesService notesService;
 
     public NotesController(NotesService notesService) {
@@ -37,17 +38,16 @@ public class NotesController {
 
     @GetMapping
     public ApiResponse listNotes(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "20") Integer size,
             Principal principal) {
 
-        // notesPage is Page<Note>
-        Page<Note> notesPage = notesService.listNotes(principal.getName(), page, size);
+        int p = (page != null) ? page : 0;
+        int s = (size != null) ? size : 20;
 
-        // Convert to Page<NoteDTO>
+        Page<Note> notesPage = notesService.listNotes(principal.getName(), p, s);
         Page<NoteDTO> dtos = notesPage.map(this::toDTO);
 
-        // Return ApiResponse with dto content and pagination info from dtos
         return new ApiResponse(
                 dtos.getContent(),
                 dtos.getNumber(),
@@ -60,7 +60,6 @@ public class NotesController {
     public ResponseEntity<NoteDTO> getNote(@PathVariable UUID id, Principal principal) {
         Note note = notesService.getNote(principal.getName(), id);
         NoteDTO dto = toDTO(note);
-        // Return weak ETag with version: W/"<version>"
         String etag = "W/\"" + note.getVersion() + "\"";
         return ResponseEntity.ok()
                 .eTag(etag)
@@ -91,20 +90,15 @@ public class NotesController {
 
     // --- helpers ---
 
-    /**
-     * Accepts If-Match as either W/"<version>" or "<version>".
-     * Throws 400 if missing/invalid, 409 should be thrown by service on mismatch.
-     */
     private int parseIfMatchVersion(String ifMatch) {
         if (ifMatch == null || ifMatch.trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing If-Match header");
         }
         String v = ifMatch.trim();
-        // Strip weak validator prefix if present
+
         if (v.regionMatches(true, 0, "W/", 0, 2)) {
             v = v.substring(2).trim();
         }
-        // Strip surrounding quotes
         if (v.startsWith("\"") && v.endsWith("\"") && v.length() >= 2) {
             v = v.substring(1, v.length() - 1);
         }
@@ -126,5 +120,4 @@ public class NotesController {
         dto.setUpdatedAt(note.getUpdatedAt());
         return dto;
     }
-
 }
